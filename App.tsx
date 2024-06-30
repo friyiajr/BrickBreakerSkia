@@ -1,138 +1,107 @@
+import { Canvas, Circle, Rect } from "@shopify/react-native-skia";
+import React from "react";
+import { Dimensions, SafeAreaView, StyleSheet } from "react-native";
 import {
-  Canvas,
-  Circle,
-  Group,
-  Line,
-  vec,
-  LinearGradient,
-} from "@shopify/react-native-skia";
-import React, { useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import {
-  useDerivedValue,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import { useFrameCallback, useSharedValue } from "react-native-reanimated";
 
-const CIRCLE_Y = 30;
-const INITIAL_X = 20;
+const LIME_GREEN = "#4AF626";
 
-interface Props {
-  delay: number;
-  yOffset: number;
+const { height, width } = Dimensions.get("window");
+const BOTTOM = height - 120;
+const PADDLE_HEIGHT = 20;
+const PADDLE_Y = BOTTOM - PADDLE_HEIGHT;
+const TOP = 10;
+
+// 10 frames every 16 milliseconds
+const GAME_SPEED = 10 / 16;
+
+const FRAME_UPDATE_TIME = 16.6;
+
+interface Point {
+  x: number;
+  y: number;
 }
 
-const MovingCircle = ({ yOffset, delay }: Props) => {
-  const xPos = useSharedValue(INITIAL_X);
-  const xPosInverse = useSharedValue(180);
-
-  const circleRadius = useSharedValue(12);
-  const inverseCircleRadius = useSharedValue(12);
-
-  useEffect(() => {
-    xPos.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(180, { duration: 900 }),
-          withTiming(INITIAL_X, { duration: 900 })
-        ),
-        -1
-      )
-    );
-
-    xPosInverse.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(INITIAL_X, { duration: 900 }),
-          withTiming(180, { duration: 900 })
-        ),
-        -1
-      )
-    );
-
-    circleRadius.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(8, { duration: 450 }),
-          withTiming(12, { duration: 450 }),
-          withTiming(18, { duration: 450 }),
-          withTiming(12, { duration: 450 })
-        ),
-        -1
-      )
-    );
-
-    inverseCircleRadius.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(18, { duration: 450 }),
-          withTiming(12, { duration: 450 }),
-          withTiming(8, { duration: 450 }),
-          withTiming(12, { duration: 450 })
-        ),
-        -1
-      )
-    );
-  }, []);
-
-  const point1 = useDerivedValue(() => {
-    return vec(xPos.value, yOffset + CIRCLE_Y);
-  }, [xPos, xPosInverse]);
-
-  const point2 = useDerivedValue(() => {
-    return vec(xPosInverse.value, yOffset + CIRCLE_Y);
-  }, [xPos, xPosInverse]);
-
-  return (
-    <>
-      <Group color="red">
-        <LinearGradient
-          start={vec(100, 0)}
-          end={vec(100, 400)}
-          colors={["#e0fbfc", "#3d5a80"]}
-        />
-        <Line p1={point1} p2={point2} strokeWidth={3} />
-        <Circle cx={xPos} cy={CIRCLE_Y + yOffset} r={circleRadius} />
-        <Circle
-          cx={xPosInverse}
-          cy={CIRCLE_Y + yOffset}
-          r={inverseCircleRadius}
-        />
-      </Group>
-    </>
+const dist = (point1: Point, point2: Point) => {
+  "worklet";
+  return Math.sqrt(
+    Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2)
   );
 };
 
 export default function App() {
+  const isDecending = useSharedValue(true);
+  const paddleX = useSharedValue(100);
+  const circleX = useSharedValue(100);
+  const circleY = useSharedValue(0);
+
+  const gesture = Gesture.Pan().onChange(({ x }) => {
+    paddleX.value = x;
+  });
+
+  useFrameCallback((frameInfo) => {
+    if (!frameInfo.timeSincePreviousFrame) {
+      return;
+    }
+
+    const distance = dist(
+      { x: circleX.value, y: circleY.value },
+      {
+        x: paddleX.value,
+        y: PADDLE_Y,
+      }
+    );
+
+    if (distance <= PADDLE_HEIGHT) {
+      isDecending.value = false;
+      circleY.value -= frameInfo.timeSincePreviousFrame * GAME_SPEED;
+      return;
+    }
+
+    // This can probably be removed later.
+    // You lose the game if this happens
+    if (circleY.value >= BOTTOM) {
+      isDecending.value = false;
+    }
+
+    if (circleY.value <= TOP) {
+      isDecending.value = true;
+    }
+
+    if (isDecending.value) {
+      circleY.value += frameInfo.timeSincePreviousFrame * GAME_SPEED;
+    } else {
+      circleY.value -= frameInfo.timeSincePreviousFrame * GAME_SPEED;
+    }
+  });
+
   return (
-    <View style={styles.container}>
-      <Canvas style={{ height: 400, width: 200 }}>
-        <MovingCircle delay={0} yOffset={0} />
-        <MovingCircle delay={125} yOffset={75} />
-        <MovingCircle delay={250} yOffset={150} />
-        <MovingCircle delay={375} yOffset={225} />
-        <MovingCircle delay={500} yOffset={300} />
-      </Canvas>
-      <View style={styles.titleContainer}>
-        <Text style={styles.titleTextNormal}>Genetic</Text>
-        <Text style={styles.titleTextBold}>AI</Text>
-      </View>
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureDetector gesture={gesture}>
+        <SafeAreaView style={styles.container}>
+          <Canvas style={{ height: BOTTOM }}>
+            <Circle cx={100} cy={circleY} color={LIME_GREEN} r={TOP} />
+            <Rect
+              x={paddleX}
+              y={PADDLE_Y}
+              height={PADDLE_HEIGHT}
+              width={100}
+              color={"white"}
+            />
+          </Canvas>
+        </SafeAreaView>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "black",
   },
   titleContainer: {
