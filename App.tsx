@@ -23,6 +23,7 @@ const PADDLE_Y = BOTTOM - PADDLE_HEIGHT;
 const TOP = 10;
 // 10 frames every 16 milliseconds
 const GAME_SPEED = 10 / 16;
+export const NUM_OF_BALLS = 10;
 
 interface Point {
   x: number;
@@ -54,7 +55,7 @@ const MovingCircle = ({ circlePosition }: CircleProps) => {
 export default function App() {
   const isLoaded = useSharedValue(false);
 
-  const circleObjects: ShapeInterface[] = Array(16)
+  const circleObjects: ShapeInterface[] = Array(NUM_OF_BALLS)
     .fill(0)
     .map((_, i) => {
       return {
@@ -76,25 +77,33 @@ export default function App() {
   }, []);
 
   useFrameCallback((frameInfo) => {
-    if (!isLoaded.value) {
+    if (!isLoaded.value || !frameInfo.timeSincePreviousFrame) {
       return;
     }
-    animate(circleObjects);
+
+    animate(circleObjects, frameInfo.timeSincePreviousFrame);
+  });
+
+  const gesture = Gesture.Pan().onChange(({ x }) => {
+    // paddleX.value = x;
+    console.log(x);
   });
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <Canvas style={{ flex: 1 }}>
-          {Array(16)
-            .fill(0)
-            .map((_, idx) => {
-              return (
-                <MovingCircle key={idx} circlePosition={circleObjects[idx]} />
-              );
-            })}
-        </Canvas>
-      </View>
+      <GestureDetector gesture={gesture}>
+        <View style={styles.container}>
+          <Canvas style={{ flex: 1 }}>
+            {Array(NUM_OF_BALLS)
+              .fill(0)
+              .map((_, idx) => {
+                return (
+                  <MovingCircle key={idx} circlePosition={circleObjects[idx]} />
+                );
+              })}
+          </Canvas>
+        </View>
+      </GestureDetector>
     </GestureHandlerRootView>
   );
 }

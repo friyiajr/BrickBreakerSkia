@@ -1,5 +1,6 @@
 import { Dimensions } from "react-native";
 import { SharedValue } from "react-native-reanimated";
+import { NUM_OF_BALLS } from "./App";
 
 const { width, height } = Dimensions.get("window");
 
@@ -11,7 +12,7 @@ function getRandomInt(min: number, max: number) {
 }
 
 export const radius = 16;
-const maxSpeed = 150;
+const maxSpeed = 100;
 
 export interface ShapeInterface {
   id: number;
@@ -129,7 +130,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 
 export const createBouncingExample = (circleObjects: ShapeInterface[]) => {
   "worklet";
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < NUM_OF_BALLS; i++) {
     const x = getRandomInt(radius, width - radius);
     const y = getRandomInt(radius, height - radius);
 
@@ -187,10 +188,14 @@ export const resolveCollisionWithBounce = (info: Collision) => {
   info.o2.vy += (k * ny) / info.o2.m;
 };
 
-export const animate = (objects: ShapeInterface[]) => {
+export const animate = (
+  objects: ShapeInterface[],
+  timeSincePreviousFrame: number
+) => {
   "worklet";
+
   for (const o of objects) {
-    move(o, 0.1);
+    move(o, (0.1 / 16) * timeSincePreviousFrame);
   }
 
   for (const o of objects) {
@@ -213,14 +218,4 @@ export const animate = (objects: ShapeInterface[]) => {
   for (const col of collisions) {
     resolveCollisionWithBounce(col);
   }
-
-  // for (const o of objects) {
-  //   o.draw();
-  // }
-
-  // window.requestAnimationFrame(animate);
 };
-
-// document.getElementById("bounceExample")!.onclick = createBouncingExample;
-
-// window.requestAnimationFrame(animate);
