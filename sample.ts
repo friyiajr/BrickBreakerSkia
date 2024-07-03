@@ -97,12 +97,12 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 export const createBouncingExample = (circleObject: CircleInterface) => {
   "worklet";
   const x = 100;
-  const y = 500;
+  const y = 600;
 
   circleObject.x.value = x;
   circleObject.y.value = y;
   circleObject.r = radius;
-  circleObject.ax = 0.4;
+  circleObject.ax = 0.8;
   circleObject.ay = 1;
   circleObject.m = radius * 10;
 };

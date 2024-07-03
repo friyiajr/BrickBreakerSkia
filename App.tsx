@@ -1,4 +1,10 @@
-import { Canvas, Circle, Rect } from "@shopify/react-native-skia";
+import {
+  Canvas,
+  Circle,
+  LinearGradient,
+  RoundedRect,
+  vec,
+} from "@shopify/react-native-skia";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -17,6 +23,7 @@ import {
   LIME_GREEN,
   PADDLE_HEIGHT,
   PADDLE_WIDTH,
+  X_MIDDLE,
   height,
 } from "./constants";
 import { animate, createBouncingExample, radius } from "./sample";
@@ -33,14 +40,21 @@ const Brick = ({ idx, brick }: Props) => {
   }, [brick.canCollide]);
 
   return (
-    <Rect
+    <RoundedRect
       key={idx}
       x={brick.x}
       y={brick.y}
       width={brick.width}
       height={brick.height}
       color={color}
-    />
+      r={8}
+    >
+      <LinearGradient
+        start={vec(5, 200)}
+        end={vec(4, 50)}
+        colors={["red", "orange"]}
+      />
+    </RoundedRect>
   );
 };
 
@@ -62,7 +76,7 @@ export default function App() {
     type: "Paddle",
     id: 0,
     x: useSharedValue(100),
-    y: useSharedValue(height - 50),
+    y: useSharedValue(height - 80),
     m: 0,
     ax: 0,
     ay: 0,
@@ -76,7 +90,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20),
+      x: useSharedValue(X_MIDDLE + BRICK_WIDTH + 50),
       y: useSharedValue(60),
       m: 0,
       ax: 0,
@@ -90,7 +104,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20 + BRICK_WIDTH + 10),
+      x: useSharedValue(X_MIDDLE),
       y: useSharedValue(60),
       m: 0,
       ax: 0,
@@ -104,7 +118,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20 + BRICK_WIDTH * 2 + 20),
+      x: useSharedValue(X_MIDDLE - BRICK_WIDTH - 50),
       y: useSharedValue(60),
       m: 0,
       ax: 0,
@@ -118,7 +132,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20),
+      x: useSharedValue(X_MIDDLE + BRICK_WIDTH + 50),
       y: useSharedValue(105),
       m: 0,
       ax: 0,
@@ -132,7 +146,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20 + BRICK_WIDTH + 10),
+      x: useSharedValue(X_MIDDLE),
       y: useSharedValue(105),
       m: 0,
       ax: 0,
@@ -146,7 +160,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20 + BRICK_WIDTH * 2 + 20),
+      x: useSharedValue(X_MIDDLE - BRICK_WIDTH - 50),
       y: useSharedValue(105),
       m: 0,
       ax: 0,
@@ -160,7 +174,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20),
+      x: useSharedValue(X_MIDDLE + BRICK_WIDTH + 50),
       y: useSharedValue(150),
       m: 0,
       ax: 0,
@@ -174,7 +188,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20 + BRICK_WIDTH + 10),
+      x: useSharedValue(X_MIDDLE),
       y: useSharedValue(150),
       m: 0,
       ax: 0,
@@ -188,7 +202,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(20 + BRICK_WIDTH * 2 + 20),
+      x: useSharedValue(X_MIDDLE - BRICK_WIDTH - 50),
       y: useSharedValue(150),
       m: 0,
       ax: 0,
@@ -229,12 +243,13 @@ export default function App() {
               r={radius}
               color={LIME_GREEN}
             />
-            <Rect
+            <RoundedRect
               x={rectangleObject.x}
               y={rectangleObject.y}
               width={rectangleObject.width}
               height={rectangleObject.height}
               color={"white"}
+              r={8}
             />
             {bricks.map((brick, idx) => {
               return <Brick key={idx} idx={idx} brick={brick} />;
