@@ -1,6 +1,6 @@
 import { Dimensions } from "react-native";
 import { SharedValue } from "react-native-reanimated";
-import { NUM_OF_BALLS } from "./App";
+import { NUM_OF_BALLS } from "./constants";
 
 const { width, height } = Dimensions.get("window");
 

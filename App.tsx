@@ -13,17 +13,7 @@ import {
   createBouncingExample,
   radius,
 } from "./sample";
-
-const LIME_GREEN = "#4AF626";
-
-const { height, width } = Dimensions.get("window");
-const BOTTOM = height - 120;
-const PADDLE_HEIGHT = 20;
-const PADDLE_Y = BOTTOM - PADDLE_HEIGHT;
-const TOP = 10;
-// 10 frames every 16 milliseconds
-const GAME_SPEED = 10 / 16;
-export const NUM_OF_BALLS = 10;
+import { LIME_GREEN, NUM_OF_BALLS } from "./constants";
 
 interface Point {
   x: number;
@@ -86,7 +76,7 @@ export default function App() {
 
   const gesture = Gesture.Pan().onChange(({ x }) => {
     // paddleX.value = x;
-    console.log(x);
+    // console.log(x);
   });
 
   return (
