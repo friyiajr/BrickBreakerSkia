@@ -1,100 +1,17 @@
 import { Dimensions } from "react-native";
-import { SharedValue } from "react-native-reanimated";
-import { NUM_OF_BALLS, PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
-
-type ShapeVariant = "Circle" | "Paddle" | "Brick";
+import { PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
+import {
+  BrickInterface,
+  CircleInterface,
+  Collision,
+  PaddleInterface,
+  ShapeInterface,
+} from "./types";
 
 const { width, height } = Dimensions.get("window");
 
-function getRandomInt(min: number, max: number) {
-  "worklet";
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 export const radius = 16;
 const maxSpeed = 100;
-
-export interface ShapeInterface {
-  id: number;
-  /**
-   * `x` position of the shape on the canvas
-   */
-  x: SharedValue<number>;
-  /**
-   * `y` position of the shape on the canvas
-   */
-  y: SharedValue<number>;
-  /**
-   * The mass of the shape
-   */
-  m: number;
-  /**
-   * The acceleration of x
-   */
-  ax: number;
-  /**
-   * The acceleration of y
-   */
-  ay: number;
-  /**
-   * The velocity of x
-   */
-  vx: number;
-  /**
-   * The velocity of y
-   */
-  vy: number;
-  /**
-   * Type
-   */
-  type: ShapeVariant;
-}
-
-export interface CircleInterface extends ShapeInterface {
-  /**
-   * The radius of the shape
-   */
-  r: number;
-}
-
-export interface PaddleInterface extends ShapeInterface {
-  /**
-   * The height of the shape
-   */
-  height: number;
-  /**
-   * The width of the shape
-   */
-  width: number;
-}
-
-/**
- * Object representing the collision between two objects
- */
-interface Collision {
-  /**
-   * The first shape
-   */
-  o1: ShapeInterface;
-  /**
-   * The second shape
-   */
-  o2: ShapeInterface;
-  /**
-   * Distance between the two x values
-   */
-  dx: number;
-  /**
-   * Distance betweeb the two y values
-   */
-  dy: number;
-  /**
-   * Total distance
-   */
-  d: number;
-}
 
 const move = (object: ShapeInterface, dt: number) => {
   "worklet";
@@ -119,7 +36,6 @@ const move = (object: ShapeInterface, dt: number) => {
 export const resolveCollisionWithBounce = (info: Collision) => {
   "worklet";
   const circleInfo = info.o1 as CircleInterface;
-  // circleInfo.x.value = circleInfo.x.value - circleInfo.r / 4;
   circleInfo.y.value = circleInfo.y.value - circleInfo.r / 2;
   circleInfo.vx = -circleInfo.vx;
   circleInfo.ax = -circleInfo.ax;
@@ -213,7 +129,19 @@ function circleRect(
 export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
   "worklet";
 
-  if (o1.type === "Circle" && o2.type === "Paddle") {
+  if (
+    (o1.type === "Circle" && o2.type === "Paddle") ||
+    (o1.type === "Circle" && o2.type === "Brick")
+  ) {
+    if (o2.type === "Brick") {
+      const brick = o2 as BrickInterface;
+      if (!brick.canCollide.value) {
+        return {
+          collisionInfo: null,
+          collided: false,
+        };
+      }
+    }
     const dx = o2.x.value - o1.x.value;
     const dy = o2.y.value - o1.y.value;
     const d = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
@@ -232,15 +160,15 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
     );
 
     if (isCollision) {
+      if (o2.type === "Brick") {
+        const brick = o2 as BrickInterface;
+        brick.canCollide.value = false;
+      }
       return {
         collisionInfo: { o1, o2, dx, dy, d },
         collided: true,
       };
     } else {
-      return {
-        collisionInfo: null,
-        collided: false,
-      };
     }
   }
   return {

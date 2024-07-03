@@ -6,15 +6,43 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import { useFrameCallback, useSharedValue } from "react-native-reanimated";
-import { LIME_GREEN, PADDLE_HEIGHT, PADDLE_WIDTH, height } from "./constants";
 import {
-  CircleInterface,
-  PaddleInterface,
-  animate,
-  createBouncingExample,
-  radius,
-} from "./sample";
+  useDerivedValue,
+  useFrameCallback,
+  useSharedValue,
+} from "react-native-reanimated";
+import {
+  BRICK_HEIGHT,
+  BRICK_WIDTH,
+  LIME_GREEN,
+  PADDLE_HEIGHT,
+  PADDLE_WIDTH,
+  height,
+} from "./constants";
+import { animate, createBouncingExample, radius } from "./sample";
+import { BrickInterface, CircleInterface, PaddleInterface } from "./types";
+
+interface Props {
+  idx: number;
+  brick: BrickInterface;
+}
+
+const Brick = ({ idx, brick }: Props) => {
+  const color = useDerivedValue(() => {
+    return brick.canCollide.value ? "orange" : "transparent";
+  }, [brick.canCollide]);
+
+  return (
+    <Rect
+      key={idx}
+      x={brick.x}
+      y={brick.y}
+      width={brick.width}
+      height={brick.height}
+      color={color}
+    />
+  );
+};
 
 export default function App() {
   const circleObject: CircleInterface = {
@@ -44,28 +72,68 @@ export default function App() {
     width: PADDLE_WIDTH,
   };
 
-  createBouncingExample(circleObject);
+  const bricks: BrickInterface[] = [
+    {
+      type: "Brick",
+      id: 0,
+      x: useSharedValue(20),
+      y: useSharedValue(75),
+      m: 0,
+      ax: 0,
+      ay: 0,
+      vx: 0,
+      vy: 0,
+      height: BRICK_HEIGHT,
+      width: BRICK_WIDTH,
+      canCollide: useSharedValue(true),
+    },
+    {
+      type: "Brick",
+      id: 0,
+      x: useSharedValue(20 + BRICK_WIDTH + 10),
+      y: useSharedValue(75),
+      m: 0,
+      ax: 0,
+      ay: 0,
+      vx: 0,
+      vy: 0,
+      height: BRICK_HEIGHT,
+      width: BRICK_WIDTH,
+      canCollide: useSharedValue(true),
+    },
+    {
+      type: "Brick",
+      id: 0,
+      x: useSharedValue(20 + BRICK_WIDTH * 2 + 20),
+      y: useSharedValue(75),
+      m: 0,
+      ax: 0,
+      ay: 0,
+      vx: 0,
+      vy: 0,
+      height: BRICK_HEIGHT,
+      width: BRICK_WIDTH,
+      canCollide: useSharedValue(true),
+    },
+  ];
 
-  const rectangleOffset = useSharedValue(0);
+  createBouncingExample(circleObject);
 
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) {
       return;
     }
 
-    animate([circleObject, rectangleObject], frameInfo.timeSincePreviousFrame);
+    animate(
+      [circleObject, rectangleObject, ...bricks],
+      frameInfo.timeSincePreviousFrame
+    );
   });
 
-  const gesture = Gesture.Pan()
-    // .onBegin(({ x }) => {
-    //   rectangleObject.x.value = rectangleOffset.value;
-    // })
-    .onChange(({ x }) => {
-      rectangleObject.x.value = x / 2;
-    });
-  // .onEnd(({ x }) => {
-  //   rectangleOffset.value = x;
-  // });
+  const gesture = Gesture.Pan().onChange(({ x }) => {
+    rectangleObject.x.value = x;
+  });
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector gesture={gesture}>
@@ -84,78 +152,15 @@ export default function App() {
               height={rectangleObject.height}
               color={"white"}
             />
+            {bricks.map((brick, idx) => {
+              return <Brick key={idx} idx={idx} brick={brick} />;
+            })}
           </Canvas>
         </View>
       </GestureDetector>
     </GestureHandlerRootView>
   );
 }
-
-// export default function App() {
-//   const isDecending = useSharedValue(true);
-//   const paddleX = useSharedValue(100);
-//   const circleX = useSharedValue(100);
-//   const circleY = useSharedValue(0);
-
-//   const gesture = Gesture.Pan().onChange(({ x }) => {
-//     paddleX.value = x;
-//   });
-
-//   useFrameCallback((frameInfo) => {
-//     if (!frameInfo.timeSincePreviousFrame) {
-//       return;
-//     }
-
-//     const distance = dist(
-//       { x: circleX.value, y: circleY.value },
-//       {
-//         x: paddleX.value,
-//         y: PADDLE_Y,
-//       }
-//     );
-
-//     if (distance <= PADDLE_HEIGHT) {
-//       isDecending.value = false;
-//       circleY.value -= frameInfo.timeSincePreviousFrame * GAME_SPEED;
-//       return;
-//     }
-
-//     // This can probably be removed later.
-//     // You lose the game if this happens
-//     if (circleY.value >= BOTTOM) {
-//       isDecending.value = false;
-//     }
-
-//     if (circleY.value <= TOP) {
-//       isDecending.value = true;
-//     }
-
-//     if (isDecending.value) {
-//       circleY.value += frameInfo.timeSincePreviousFrame * GAME_SPEED;
-//     } else {
-//       circleY.value -= frameInfo.timeSincePreviousFrame * GAME_SPEED;
-//     }
-//   });
-
-//   return (
-//     <GestureHandlerRootView style={{ flex: 1 }}>
-//       <GestureDetector gesture={gesture}>
-//         <SafeAreaView style={styles.container}>
-//           <Canvas style={{ height: BOTTOM }}>
-//             <Circle cx={100} cy={circleY} color={LIME_GREEN} r={TOP} />
-//             <Rect
-//               x={paddleX}
-//               y={PADDLE_Y}
-//               height={PADDLE_HEIGHT}
-//               width={100}
-//               color={"white"}
-//             />
-//           </Canvas>
-//         </SafeAreaView>
-//       </GestureDetector>
-//     </GestureHandlerRootView>
-//   );
-// }
 
 const styles = StyleSheet.create({
   container: {
