@@ -36,7 +36,20 @@ const move = (object: ShapeInterface, dt: number) => {
 export const resolveCollisionWithBounce = (info: Collision) => {
   "worklet";
   const circleInfo = info.o1 as CircleInterface;
-  circleInfo.y.value = circleInfo.y.value - circleInfo.r / 2;
+
+  if (info.o2.type === "Paddle") {
+    circleInfo.y.value = circleInfo.y.value - circleInfo.r;
+  } else if (info.o2.type === "Brick") {
+    circleInfo.y.value = circleInfo.y.value + circleInfo.r;
+
+    if (circleInfo.ay > 0) {
+      circleInfo.vx = -circleInfo.vx;
+      circleInfo.ax = -circleInfo.ax;
+
+      return;
+    }
+  }
+
   circleInfo.vx = -circleInfo.vx;
   circleInfo.ax = -circleInfo.ax;
   circleInfo.vy = -circleInfo.vy;
@@ -89,7 +102,7 @@ export const createBouncingExample = (circleObject: CircleInterface) => {
   circleObject.x.value = x;
   circleObject.y.value = y;
   circleObject.r = radius;
-  circleObject.ax = 0.5;
+  circleObject.ax = 0.4;
   circleObject.ay = 1;
   circleObject.m = radius * 10;
 };
@@ -184,7 +197,7 @@ export const animate = (
   "worklet";
 
   for (const o of objects) {
-    move(o, (0.1 / 16) * timeSincePreviousFrame);
+    move(o, (0.15 / 16) * timeSincePreviousFrame);
   }
 
   for (const o of objects) {
