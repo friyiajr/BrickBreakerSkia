@@ -43,8 +43,8 @@ export const resolveCollisionWithBounce = (info: Collision) => {
     circleInfo.y.value = circleInfo.y.value + circleInfo.r;
 
     if (circleInfo.ay > 0) {
-      circleInfo.vx = -circleInfo.vx;
-      circleInfo.ax = -circleInfo.ax;
+      circleInfo.vy = -circleInfo.vy;
+      circleInfo.ay = -circleInfo.ay;
 
       return;
     }

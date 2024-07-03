@@ -23,8 +23,9 @@ import {
   LIME_GREEN,
   PADDLE_HEIGHT,
   PADDLE_WIDTH,
-  X_MIDDLE,
+  BRICK_MIDDLE,
   height,
+  PADDLE_MIDDLE,
 } from "./constants";
 import { animate, createBouncingExample, radius } from "./sample";
 import { BrickInterface, CircleInterface, PaddleInterface } from "./types";
@@ -75,7 +76,7 @@ export default function App() {
   const rectangleObject: PaddleInterface = {
     type: "Paddle",
     id: 0,
-    x: useSharedValue(100),
+    x: useSharedValue(PADDLE_MIDDLE),
     y: useSharedValue(height - 80),
     m: 0,
     ax: 0,
@@ -90,7 +91,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE + BRICK_WIDTH + 50),
+      x: useSharedValue(BRICK_MIDDLE + BRICK_WIDTH + 50),
       y: useSharedValue(60),
       m: 0,
       ax: 0,
@@ -104,7 +105,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE),
+      x: useSharedValue(BRICK_MIDDLE),
       y: useSharedValue(60),
       m: 0,
       ax: 0,
@@ -118,7 +119,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE - BRICK_WIDTH - 50),
+      x: useSharedValue(BRICK_MIDDLE - BRICK_WIDTH - 50),
       y: useSharedValue(60),
       m: 0,
       ax: 0,
@@ -132,7 +133,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE + BRICK_WIDTH + 50),
+      x: useSharedValue(BRICK_MIDDLE + BRICK_WIDTH + 50),
       y: useSharedValue(105),
       m: 0,
       ax: 0,
@@ -146,7 +147,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE),
+      x: useSharedValue(BRICK_MIDDLE),
       y: useSharedValue(105),
       m: 0,
       ax: 0,
@@ -160,7 +161,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE - BRICK_WIDTH - 50),
+      x: useSharedValue(BRICK_MIDDLE - BRICK_WIDTH - 50),
       y: useSharedValue(105),
       m: 0,
       ax: 0,
@@ -174,7 +175,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE + BRICK_WIDTH + 50),
+      x: useSharedValue(BRICK_MIDDLE + BRICK_WIDTH + 50),
       y: useSharedValue(150),
       m: 0,
       ax: 0,
@@ -188,7 +189,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE),
+      x: useSharedValue(BRICK_MIDDLE),
       y: useSharedValue(150),
       m: 0,
       ax: 0,
@@ -202,7 +203,7 @@ export default function App() {
     {
       type: "Brick",
       id: 0,
-      x: useSharedValue(X_MIDDLE - BRICK_WIDTH - 50),
+      x: useSharedValue(BRICK_MIDDLE - BRICK_WIDTH - 50),
       y: useSharedValue(150),
       m: 0,
       ax: 0,
@@ -229,7 +230,7 @@ export default function App() {
   });
 
   const gesture = Gesture.Pan().onChange(({ x }) => {
-    rectangleObject.x.value = x;
+    rectangleObject.x.value = x - PADDLE_WIDTH / 2;
   });
 
   return (
