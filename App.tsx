@@ -1,96 +1,89 @@
 import { Canvas, Circle, Rect } from "@shopify/react-native-skia";
-import React, { useEffect, useState } from "react";
-import { Dimensions, SafeAreaView, StyleSheet, View } from "react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import { useFrameCallback, useSharedValue } from "react-native-reanimated";
+import { LIME_GREEN, PADDLE_HEIGHT, PADDLE_WIDTH, height } from "./constants";
 import {
-  ShapeInterface,
+  CircleInterface,
+  PaddleInterface,
   animate,
   createBouncingExample,
   radius,
 } from "./sample";
-import { LIME_GREEN, NUM_OF_BALLS } from "./constants";
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-const dist = (point1: Point, point2: Point) => {
-  "worklet";
-  return Math.sqrt(
-    Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2)
-  );
-};
-
-interface CircleProps {
-  circlePosition: ShapeInterface;
-}
-
-const MovingCircle = ({ circlePosition }: CircleProps) => {
-  return (
-    <Circle
-      cx={circlePosition.x}
-      cy={circlePosition.y}
-      r={radius}
-      color={LIME_GREEN}
-    />
-  );
-};
 
 export default function App() {
-  const isLoaded = useSharedValue(false);
+  const circleObject: CircleInterface = {
+    type: "Circle",
+    id: 0,
+    x: useSharedValue(0),
+    y: useSharedValue(0),
+    r: radius,
+    m: 0,
+    ax: 0,
+    ay: 0,
+    vx: 0,
+    vy: 0,
+  };
 
-  const circleObjects: ShapeInterface[] = Array(NUM_OF_BALLS)
-    .fill(0)
-    .map((_, i) => {
-      return {
-        id: i,
-        x: useSharedValue(0),
-        y: useSharedValue(0),
-        r: radius,
-        m: 0,
-        ax: 0,
-        ay: 0,
-        vx: 0,
-        vy: 0,
-      };
-    });
+  const rectangleObject: PaddleInterface = {
+    type: "Paddle",
+    id: 0,
+    x: useSharedValue(100),
+    y: useSharedValue(height - 50),
+    m: 0,
+    ax: 0,
+    ay: 0,
+    vx: 0,
+    vy: 0,
+    height: PADDLE_HEIGHT,
+    width: PADDLE_WIDTH,
+  };
 
-  useEffect(() => {
-    createBouncingExample(circleObjects);
-    isLoaded.value = true;
-  }, []);
+  createBouncingExample(circleObject);
+
+  const rectangleOffset = useSharedValue(0);
 
   useFrameCallback((frameInfo) => {
-    if (!isLoaded.value || !frameInfo.timeSincePreviousFrame) {
+    if (!frameInfo.timeSincePreviousFrame) {
       return;
     }
 
-    animate(circleObjects, frameInfo.timeSincePreviousFrame);
+    animate([circleObject, rectangleObject], frameInfo.timeSincePreviousFrame);
   });
 
-  const gesture = Gesture.Pan().onChange(({ x }) => {
-    // paddleX.value = x;
-    // console.log(x);
-  });
-
+  const gesture = Gesture.Pan()
+    // .onBegin(({ x }) => {
+    //   rectangleObject.x.value = rectangleOffset.value;
+    // })
+    .onChange(({ x }) => {
+      rectangleObject.x.value = x / 2;
+    });
+  // .onEnd(({ x }) => {
+  //   rectangleOffset.value = x;
+  // });
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector gesture={gesture}>
         <View style={styles.container}>
           <Canvas style={{ flex: 1 }}>
-            {Array(NUM_OF_BALLS)
-              .fill(0)
-              .map((_, idx) => {
-                return (
-                  <MovingCircle key={idx} circlePosition={circleObjects[idx]} />
-                );
-              })}
+            <Circle
+              cx={circleObject.x}
+              cy={circleObject.y}
+              r={radius}
+              color={LIME_GREEN}
+            />
+            <Rect
+              x={rectangleObject.x}
+              y={rectangleObject.y}
+              width={rectangleObject.width}
+              height={rectangleObject.height}
+              color={"white"}
+            />
           </Canvas>
         </View>
       </GestureDetector>

@@ -1,6 +1,8 @@
 import { Dimensions } from "react-native";
 import { SharedValue } from "react-native-reanimated";
-import { NUM_OF_BALLS } from "./constants";
+import { NUM_OF_BALLS, PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
+
+type ShapeVariant = "Circle" | "Paddle" | "Brick";
 
 const { width, height } = Dimensions.get("window");
 
@@ -25,10 +27,6 @@ export interface ShapeInterface {
    */
   y: SharedValue<number>;
   /**
-   * The radius of the shape
-   */
-  r: number;
-  /**
    * The mass of the shape
    */
   m: number;
@@ -48,6 +46,28 @@ export interface ShapeInterface {
    * The velocity of y
    */
   vy: number;
+  /**
+   * Type
+   */
+  type: ShapeVariant;
+}
+
+export interface CircleInterface extends ShapeInterface {
+  /**
+   * The radius of the shape
+   */
+  r: number;
+}
+
+export interface PaddleInterface extends ShapeInterface {
+  /**
+   * The height of the shape
+   */
+  height: number;
+  /**
+   * The width of the shape
+   */
+  width: number;
 }
 
 /**
@@ -96,96 +116,137 @@ const move = (object: ShapeInterface, dt: number) => {
   object.y.value += object.vy * dt;
 };
 
+export const resolveCollisionWithBounce = (info: Collision) => {
+  "worklet";
+  const circleInfo = info.o1 as CircleInterface;
+  // circleInfo.x.value = circleInfo.x.value - circleInfo.r / 4;
+  circleInfo.y.value = circleInfo.y.value - circleInfo.r / 2;
+  circleInfo.vx = -circleInfo.vx;
+  circleInfo.ax = -circleInfo.ax;
+  circleInfo.vy = -circleInfo.vy;
+  circleInfo.ay = -circleInfo.ay;
+};
+
 export const resolveWallCollision = (object: ShapeInterface) => {
   "worklet";
   // Collision with the right wall
-  if (object.x.value + object.r > width) {
-    // Calculate the overshot
-    object.x.value = width - object.r;
-    object.vx = -object.vx;
-    object.ax = -object.ax;
-  }
+  if (object.type === "Circle") {
+    const circleObject = object as CircleInterface;
+    if (circleObject.x.value + circleObject.r > width) {
+      // Calculate the overshot
+      circleObject.x.value = width - circleObject.r;
+      circleObject.vx = -circleObject.vx;
+      circleObject.ax = -circleObject.ax;
+    }
 
-  // Collision with the bottom wall
-  else if (object.y.value + object.r > height) {
-    object.y.value = height - object.r;
-    object.vy = -object.vy;
-    object.ay = -object.ay;
-  }
+    // Collision with the bottom wall
+    else if (circleObject.y.value + circleObject.r > height) {
+      circleObject.y.value = 0;
+      circleObject.x.value = 0;
+      circleObject.vx = 0;
+      circleObject.ax = 0;
+      circleObject.vy = 0;
+      circleObject.ay = 0;
+    }
 
-  // Collision with the left wall
-  else if (object.x.value - object.r < 0) {
-    object.x.value = object.r;
-    object.vx = -object.vx;
-    object.ax = -object.ax;
-  }
+    // Collision with the left wall
+    else if (circleObject.x.value - circleObject.r < 0) {
+      circleObject.x.value = circleObject.r;
+      circleObject.vx = -circleObject.vx;
+      circleObject.ax = -circleObject.ax;
+    }
 
-  // Detect collision with the top wall
-  else if (object.y.value - object.r < 0) {
-    object.y.value = object.r;
-    object.vy = -object.vy;
-    object.ay = -object.ay;
+    // Detect collision with the top wall
+    else if (circleObject.y.value - circleObject.r < 0) {
+      circleObject.y.value = circleObject.r;
+      circleObject.vy = -circleObject.vy;
+      circleObject.ay = -circleObject.ay;
+    }
   }
 };
 
-export const createBouncingExample = (circleObjects: ShapeInterface[]) => {
+export const createBouncingExample = (circleObject: CircleInterface) => {
   "worklet";
-  for (let i = 0; i < NUM_OF_BALLS; i++) {
-    const x = getRandomInt(radius, width - radius);
-    const y = getRandomInt(radius, height - radius);
+  const x = 100;
+  const y = 500;
 
-    circleObjects[i].x.value = x;
-    circleObjects[i].y.value = y;
-    circleObjects[i].r = radius;
-    circleObjects[i].ax = getRandomInt(-1, 1);
-    circleObjects[i].ay = getRandomInt(-1, 1);
-    circleObjects[i].m = radius * 10;
-  }
+  circleObject.x.value = x;
+  circleObject.y.value = y;
+  circleObject.r = radius;
+  circleObject.ax = 0.5;
+  circleObject.ay = 1;
+  circleObject.m = radius * 10;
 };
+
+function circleRect(
+  cx: number,
+  cy: number,
+  radius: number,
+  rx: number,
+  ry: number,
+  rw: number,
+  rh: number
+) {
+  "worklet";
+  // temporary variables to set edges for testing
+  let testX = cx;
+  let testY = cy;
+
+  // which edge is closest?
+  if (cx < rx) testX = rx; // test left edge
+  else if (cx > rx + rw) testX = rx + rw; // right edge
+  if (cy < ry) testY = ry; // top edge
+  else if (cy > ry + rh) testY = ry + rh; // bottom edge
+
+  // get distance from closest edges
+  let distX = cx - testX;
+  let distY = cy - testY;
+  let distance = Math.sqrt(distX * distX + distY * distY);
+
+  // if the distance is less than the radius, collision!
+  if (distance <= radius) {
+    return true;
+  }
+  return false;
+}
 
 export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
   "worklet";
-  const dx = o2.x.value - o1.x.value;
-  const dy = o2.y.value - o1.y.value;
-  const d = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 
-  if (d < o1.r + o2.r) {
-    return {
-      collisionInfo: { o1, o2, dx, dy, d },
-      collided: true,
-    };
-  } else {
-    return {
-      collisionInfo: null,
-      collided: false,
-    };
+  if (o1.type === "Circle" && o2.type === "Paddle") {
+    const dx = o2.x.value - o1.x.value;
+    const dy = o2.y.value - o1.y.value;
+    const d = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+
+    const circleObj = o1 as CircleInterface;
+    const paddleObj = o2 as PaddleInterface;
+
+    const isCollision = circleRect(
+      circleObj.x.value,
+      circleObj.y.value,
+      radius,
+      paddleObj.x.value,
+      paddleObj.y.value,
+      PADDLE_WIDTH,
+      PADDLE_HEIGHT
+    );
+
+    if (isCollision) {
+      return {
+        collisionInfo: { o1, o2, dx, dy, d },
+        collided: true,
+      };
+    } else {
+      return {
+        collisionInfo: null,
+        collided: false,
+      };
+    }
   }
-};
-
-export const resolveCollisionWithBounce = (info: Collision) => {
-  "worklet";
-  // Eigen Vector
-  const nx = info.dx / info.d;
-  const ny = info.dy / info.d;
-
-  // Penetration Depth
-  const s = info.o1.r + info.o2.r - info.d;
-
-  info.o1.x.value -= (nx * s) / 2;
-  info.o1.y.value -= (ny * s) / 2;
-
-  info.o2.x.value += (nx * s) / 2;
-  info.o2.y.value += (ny * s) / 2;
-
-  const k =
-    (-2 * ((info.o2.vx - info.o1.vx) * nx + (info.o2.vy - info.o1.vy) * ny)) /
-    (1 / info.o1.m + 1 / info.o2.m);
-
-  info.o1.vx -= (k * nx) / info.o1.m;
-  info.o1.vy -= (k * ny) / info.o1.m;
-
-  info.o2.vx += (k * nx) / info.o2.m;
-  info.o2.vy += (k * ny) / info.o2.m;
+  return {
+    collisionInfo: null,
+    collided: false,
+  };
 };
 
 export const animate = (
