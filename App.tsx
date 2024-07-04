@@ -77,7 +77,7 @@ export default function App() {
     type: "Paddle",
     id: 0,
     x: useSharedValue(PADDLE_MIDDLE),
-    y: useSharedValue(height - 80),
+    y: useSharedValue(height - 100),
     m: 0,
     ax: 0,
     ay: 0,

@@ -1,5 +1,5 @@
 import { Dimensions } from "react-native";
-import { PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
+import { BRICK_WIDTH, PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
 import {
   BrickInterface,
   CircleInterface,
@@ -50,8 +50,8 @@ export const resolveCollisionWithBounce = (info: Collision) => {
     }
   }
 
-  circleInfo.vx = -circleInfo.vx;
-  circleInfo.ax = -circleInfo.ax;
+  circleInfo.vx = circleInfo.vx;
+  circleInfo.ax = circleInfo.ax;
   circleInfo.vy = -circleInfo.vy;
   circleInfo.ay = -circleInfo.ay;
 };
@@ -102,7 +102,7 @@ export const createBouncingExample = (circleObject: CircleInterface) => {
   circleObject.x.value = x;
   circleObject.y.value = y;
   circleObject.r = radius;
-  circleObject.ax = 0.8;
+  circleObject.ax = 0.5;
   circleObject.ay = 1;
   circleObject.m = radius * 10;
 };
