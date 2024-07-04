@@ -2,11 +2,14 @@ import {
   Canvas,
   Circle,
   LinearGradient,
+  matchFont,
+  Rect,
   RoundedRect,
+  Text,
   vec,
 } from "@shopify/react-native-skia";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -26,6 +29,7 @@ import {
   BRICK_MIDDLE,
   height,
   PADDLE_MIDDLE,
+  width,
 } from "./constants";
 import { animate, createBouncingExample, radius } from "./sample";
 import { BrickInterface, CircleInterface, PaddleInterface } from "./types";
@@ -34,6 +38,16 @@ interface Props {
   idx: number;
   brick: BrickInterface;
 }
+
+const fontFamily = Platform.select({ ios: "Helvetica", default: "serif" });
+const fontStyle = {
+  fontFamily,
+  fontSize: 55,
+  fontWeight: "bold",
+};
+
+// @ts-ignore
+const font = matchFont(fontStyle);
 
 const Brick = ({ idx, brick }: Props) => {
   const color = useDerivedValue(() => {
@@ -60,6 +74,8 @@ const Brick = ({ idx, brick }: Props) => {
 };
 
 export default function App() {
+  const brickCount = useSharedValue(0);
+
   const circleObject: CircleInterface = {
     type: "Circle",
     id: 0,
@@ -223,15 +239,32 @@ export default function App() {
       return;
     }
 
+    if (brickCount.value === 9 || brickCount.value === -1) {
+      return;
+    }
     animate(
       [circleObject, rectangleObject, ...bricks],
-      frameInfo.timeSincePreviousFrame
+      frameInfo.timeSincePreviousFrame,
+      brickCount
     );
   });
 
   const gesture = Gesture.Pan().onChange(({ x }) => {
     rectangleObject.x.value = x - PADDLE_WIDTH / 2;
   });
+
+  const opacity = useDerivedValue(() => {
+    return brickCount.value === 9 || brickCount.value === -1 ? 1 : 0;
+  }, [brickCount]);
+
+  const textPosition = useDerivedValue(() => {
+    const endText = brickCount.value === 9 ? "YOU WIN" : "YOU LOSE";
+    return (width - font.measureText(endText).width) / 2;
+  }, [font]);
+
+  const gameEndingText = useDerivedValue(() => {
+    return brickCount.value === 9 ? "YOU WIN" : "YOU LOSE";
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -255,6 +288,27 @@ export default function App() {
             {bricks.map((brick, idx) => {
               return <Brick key={idx} idx={idx} brick={brick} />;
             })}
+            <Rect
+              x={0}
+              y={0}
+              height={height}
+              width={width}
+              color={"red"}
+              opacity={opacity}
+            >
+              <LinearGradient
+                start={vec(0, 200)}
+                end={vec(0, 500)}
+                colors={["#4070D3", "#EA2F86"]}
+              />
+            </Rect>
+            <Text
+              x={textPosition}
+              y={height / 2}
+              text={gameEndingText}
+              font={font}
+              opacity={opacity}
+            />
           </Canvas>
         </View>
       </GestureDetector>

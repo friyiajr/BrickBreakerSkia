@@ -7,6 +7,7 @@ import {
   PaddleInterface,
   ShapeInterface,
 } from "./types";
+import { SharedValue } from "react-native-reanimated";
 
 const { width, height } = Dimensions.get("window");
 
@@ -76,6 +77,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
       circleObject.ax = 0;
       circleObject.vy = 0;
       circleObject.ay = 0;
+      return true;
     }
 
     // Collision with the left wall
@@ -91,6 +93,8 @@ export const resolveWallCollision = (object: ShapeInterface) => {
       circleObject.vy = -circleObject.vy;
       circleObject.ay = -circleObject.ay;
     }
+
+    return false;
   }
 };
 
@@ -192,7 +196,8 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
 
 export const animate = (
   objects: ShapeInterface[],
-  timeSincePreviousFrame: number
+  timeSincePreviousFrame: number,
+  brickCount: SharedValue<number>
 ) => {
   "worklet";
 
@@ -201,7 +206,10 @@ export const animate = (
   }
 
   for (const o of objects) {
-    resolveWallCollision(o);
+    const isGameLost = resolveWallCollision(o);
+    if (isGameLost) {
+      brickCount.value = -1;
+    }
   }
 
   const collisions: Collision[] = [];
@@ -218,6 +226,9 @@ export const animate = (
   }
 
   for (const col of collisions) {
+    if (col.o2.type === "Brick") {
+      brickCount.value++;
+    }
     resolveCollisionWithBounce(col);
   }
 };
