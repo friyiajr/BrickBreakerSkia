@@ -40,17 +40,10 @@ export const resolveCollisionWithBounce = (info: Collision) => {
   "worklet";
   const circleInfo = info.o1 as CircleInterface;
 
-  if (info.o2.type === "Paddle") {
-    circleInfo.y.value = circleInfo.y.value - circleInfo.r;
-  } else if (info.o2.type === "Brick") {
-    circleInfo.y.value = circleInfo.y.value + circleInfo.r;
+  circleInfo.y.value = circleInfo.y.value - circleInfo.r;
 
-    if (circleInfo.ay > 0) {
-      circleInfo.vy = -circleInfo.vy;
-      circleInfo.ay = -circleInfo.ay;
-
-      return;
-    }
+  if (info.o2.type === "Brick" && circleInfo.ay > 0) {
+    return;
   }
 
   circleInfo.vx = circleInfo.vx;
