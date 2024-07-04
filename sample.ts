@@ -1,5 +1,6 @@
 import { Dimensions } from "react-native";
-import { BRICK_WIDTH, PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
+import { SharedValue } from "react-native-reanimated";
+import { PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
 import {
   BrickInterface,
   CircleInterface,
@@ -7,8 +8,6 @@ import {
   PaddleInterface,
   ShapeInterface,
 } from "./types";
-import { SharedValue } from "react-native-reanimated";
-import { Ref, RefObject } from "react";
 
 const { width, height } = Dimensions.get("window");
 
@@ -17,22 +16,24 @@ const maxSpeed = 50;
 
 const move = (object: ShapeInterface, dt: number) => {
   "worklet";
-  object.vx += object.ax * dt;
-  object.vy += object.ay * dt;
-  if (object.vx > maxSpeed) {
-    object.vx = maxSpeed;
+  if (object.type === "Circle") {
+    object.vx += object.ax * dt;
+    object.vy += object.ay * dt;
+    if (object.vx > maxSpeed) {
+      object.vx = maxSpeed;
+    }
+    if (object.vx < -maxSpeed) {
+      object.vx = -maxSpeed;
+    }
+    if (object.vy > maxSpeed) {
+      object.vy = maxSpeed;
+    }
+    if (object.vy < -maxSpeed) {
+      object.vy = -maxSpeed;
+    }
+    object.x.value += object.vx * dt;
+    object.y.value += object.vy * dt;
   }
-  if (object.vx < -maxSpeed) {
-    object.vx = -maxSpeed;
-  }
-  if (object.vy > maxSpeed) {
-    object.vy = maxSpeed;
-  }
-  if (object.vy < -maxSpeed) {
-    object.vy = -maxSpeed;
-  }
-  object.x.value += object.vx * dt;
-  object.y.value += object.vy * dt;
 };
 
 export const resolveCollisionWithBounce = (info: Collision) => {
@@ -72,10 +73,12 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 
     // Collision with the bottom wall
     else if (circleObject.y.value + circleObject.r > height) {
-      circleObject.y.value = 0;
-      circleObject.x.value = 0;
-      circleObject.ax = 0;
-      circleObject.ay = 0;
+      circleObject.x.value = 100;
+      circleObject.y.value = 450;
+      circleObject.ax = 0.5;
+      circleObject.ay = 1;
+      circleObject.vx = 0;
+      circleObject.vy = 0;
       return true;
     }
 
@@ -99,14 +102,14 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 
 export const createBouncingExample = (circleObject: CircleInterface) => {
   "worklet";
-  const x = 100;
-  const y = 450;
 
-  circleObject.x.value = x;
-  circleObject.y.value = y;
+  circleObject.x.value = 100;
+  circleObject.y.value = 450;
   circleObject.r = radius;
   circleObject.ax = 0.5;
   circleObject.ay = 1;
+  circleObject.vx = 0;
+  circleObject.vy = 0;
   circleObject.m = radius * 10;
 };
 

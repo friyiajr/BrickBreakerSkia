@@ -8,36 +8,27 @@ import {
   Text,
   vec,
 } from "@shopify/react-native-skia";
-import React, { useRef } from "react";
-import {
-  Button,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-  Text as RNText,
-  ViewStyle,
-} from "react-native";
+import React from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import Animated, {
-  useAnimatedProps,
+import {
   useDerivedValue,
   useFrameCallback,
   useSharedValue,
 } from "react-native-reanimated";
 import {
   BRICK_HEIGHT,
+  BRICK_MIDDLE,
   BRICK_WIDTH,
+  height,
   LIME_GREEN,
   PADDLE_HEIGHT,
-  PADDLE_WIDTH,
-  BRICK_MIDDLE,
-  height,
   PADDLE_MIDDLE,
+  PADDLE_WIDTH,
   width,
 } from "./constants";
 import { animate, createBouncingExample, radius } from "./sample";
@@ -57,8 +48,6 @@ const fontStyle = {
 
 // @ts-ignore
 const font = matchFont(fontStyle);
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const Brick = ({ idx, brick }: Props) => {
   const color = useDerivedValue(() => {
@@ -161,17 +150,14 @@ export default function App() {
   const resetGame = () => {
     "worklet";
 
+    rectangleObject.x.value = PADDLE_MIDDLE;
+
+    createBouncingExample(circleObject);
     for (const brick of bricks) {
       brick.canCollide.value = true;
     }
 
     brickCount.value = 0;
-
-    rectangleObject.x.value = PADDLE_MIDDLE;
-
-    createBouncingExample(circleObject);
-    circleObject.vx = 0;
-    circleObject.vy = 0;
   };
 
   createBouncingExample(circleObject);
@@ -182,6 +168,10 @@ export default function App() {
     }
 
     if (brickCount.value === 9 || brickCount.value === -1) {
+      circleObject.ax = 0.5;
+      circleObject.ay = 1;
+      circleObject.vx = 0;
+      circleObject.vy = 0;
       return;
     }
 
@@ -192,9 +182,15 @@ export default function App() {
     );
   });
 
-  const gesture = Gesture.Pan().onChange(({ x }) => {
-    rectangleObject.x.value = x - PADDLE_WIDTH / 2;
-  });
+  const gesture = Gesture.Pan()
+    .onBegin(() => {
+      if (brickCount.value === 9 || brickCount.value === -1) {
+        resetGame();
+      }
+    })
+    .onChange(({ x }) => {
+      rectangleObject.x.value = x - PADDLE_WIDTH / 2;
+    });
 
   const opacity = useDerivedValue(() => {
     return brickCount.value === 9 || brickCount.value === -1 ? 1 : 0;
@@ -208,12 +204,6 @@ export default function App() {
   const gameEndingText = useDerivedValue(() => {
     return brickCount.value === 9 ? "YOU WIN" : "YOU LOSE";
   }, []);
-
-  const animatedProps: ViewStyle = useAnimatedProps(() => {
-    return {
-      opacity: opacity.value,
-    };
-  }, [brickCount]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -259,30 +249,6 @@ export default function App() {
               opacity={opacity}
             />
           </Canvas>
-          <AnimatedPressable
-            animatedProps={animatedProps}
-            style={{
-              position: "absolute",
-              zIndex: 999,
-              elevation: 999,
-              bottom: 75,
-              alignSelf: "center",
-              backgroundColor: "purple",
-              paddingVertical: 20,
-              paddingHorizontal: 50,
-              borderRadius: 8,
-            }}
-            onPress={resetGame}
-          >
-            <RNText
-              style={{
-                fontSize: 20,
-                color: "white",
-              }}
-            >
-              Try Again
-            </RNText>
-          </AnimatedPressable>
         </View>
       </GestureDetector>
     </GestureHandlerRootView>
