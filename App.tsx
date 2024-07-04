@@ -8,14 +8,23 @@ import {
   Text,
   vec,
 } from "@shopify/react-native-skia";
-import React from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import React, { useRef } from "react";
+import {
+  Button,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  Text as RNText,
+  ViewStyle,
+} from "react-native";
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import {
+import Animated, {
+  useAnimatedProps,
   useDerivedValue,
   useFrameCallback,
   useSharedValue,
@@ -48,6 +57,8 @@ const fontStyle = {
 
 // @ts-ignore
 const font = matchFont(fontStyle);
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const Brick = ({ idx, brick }: Props) => {
   const color = useDerivedValue(() => {
@@ -103,134 +114,65 @@ export default function App() {
     width: PADDLE_WIDTH,
   };
 
-  const bricks: BrickInterface[] = [
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE + BRICK_WIDTH + 50),
-      y: useSharedValue(60),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE),
-      y: useSharedValue(60),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE - BRICK_WIDTH - 50),
-      y: useSharedValue(60),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE + BRICK_WIDTH + 50),
-      y: useSharedValue(105),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE),
-      y: useSharedValue(105),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE - BRICK_WIDTH - 50),
-      y: useSharedValue(105),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE + BRICK_WIDTH + 50),
-      y: useSharedValue(150),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE),
-      y: useSharedValue(150),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-    {
-      type: "Brick",
-      id: 0,
-      x: useSharedValue(BRICK_MIDDLE - BRICK_WIDTH - 50),
-      y: useSharedValue(150),
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-      height: BRICK_HEIGHT,
-      width: BRICK_WIDTH,
-      canCollide: useSharedValue(true),
-    },
-  ];
+  const bricks: BrickInterface[] = Array(9)
+    .fill(0)
+    .map((_, idx) => {
+      const farBrickX = BRICK_MIDDLE + BRICK_WIDTH + 50;
+      const middleBrickX = BRICK_MIDDLE;
+      const closeBrickX = BRICK_MIDDLE - BRICK_WIDTH - 50;
+      const startingY = 60;
+      const ySpacing = 45;
+
+      let startingXPosition = -1;
+      let startingYPosition = -1;
+
+      if (idx % 3 === 0) {
+        startingXPosition = farBrickX;
+      } else if (idx % 3 === 1) {
+        startingXPosition = middleBrickX;
+      } else if (idx % 3 === 2) {
+        startingXPosition = closeBrickX;
+      }
+
+      if (idx / 9 <= 0.333) {
+        startingYPosition = startingY;
+      } else if (idx / 9 <= 0.666) {
+        startingYPosition = startingY + ySpacing;
+      } else if (idx / 9 <= 1) {
+        startingYPosition = startingY + ySpacing * 2;
+      }
+
+      return {
+        type: "Brick",
+        id: 0,
+        x: useSharedValue(startingXPosition),
+        y: useSharedValue(startingYPosition),
+        m: 0,
+        ax: 0,
+        ay: 0,
+        vx: 0,
+        vy: 0,
+        height: BRICK_HEIGHT,
+        width: BRICK_WIDTH,
+        canCollide: useSharedValue(true),
+      };
+    });
+
+  const resetGame = () => {
+    "worklet";
+
+    for (const brick of bricks) {
+      brick.canCollide.value = true;
+    }
+
+    brickCount.value = 0;
+
+    rectangleObject.x.value = PADDLE_MIDDLE;
+
+    createBouncingExample(circleObject);
+    circleObject.vx = 0;
+    circleObject.vy = 0;
+  };
 
   createBouncingExample(circleObject);
 
@@ -242,6 +184,7 @@ export default function App() {
     if (brickCount.value === 9 || brickCount.value === -1) {
       return;
     }
+
     animate(
       [circleObject, rectangleObject, ...bricks],
       frameInfo.timeSincePreviousFrame,
@@ -265,6 +208,12 @@ export default function App() {
   const gameEndingText = useDerivedValue(() => {
     return brickCount.value === 9 ? "YOU WIN" : "YOU LOSE";
   }, []);
+
+  const animatedProps: ViewStyle = useAnimatedProps(() => {
+    return {
+      opacity: opacity.value,
+    };
+  }, [brickCount]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -310,6 +259,30 @@ export default function App() {
               opacity={opacity}
             />
           </Canvas>
+          <AnimatedPressable
+            animatedProps={animatedProps}
+            style={{
+              position: "absolute",
+              zIndex: 999,
+              elevation: 999,
+              bottom: 75,
+              alignSelf: "center",
+              backgroundColor: "purple",
+              paddingVertical: 20,
+              paddingHorizontal: 50,
+              borderRadius: 8,
+            }}
+            onPress={resetGame}
+          >
+            <RNText
+              style={{
+                fontSize: 20,
+                color: "white",
+              }}
+            >
+              Try Again
+            </RNText>
+          </AnimatedPressable>
         </View>
       </GestureDetector>
     </GestureHandlerRootView>

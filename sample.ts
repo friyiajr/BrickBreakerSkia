@@ -8,11 +8,12 @@ import {
   ShapeInterface,
 } from "./types";
 import { SharedValue } from "react-native-reanimated";
+import { Ref, RefObject } from "react";
 
 const { width, height } = Dimensions.get("window");
 
 export const radius = 16;
-const maxSpeed = 100;
+const maxSpeed = 50;
 
 const move = (object: ShapeInterface, dt: number) => {
   "worklet";
@@ -73,9 +74,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
     else if (circleObject.y.value + circleObject.r > height) {
       circleObject.y.value = 0;
       circleObject.x.value = 0;
-      circleObject.vx = 0;
       circleObject.ax = 0;
-      circleObject.vy = 0;
       circleObject.ay = 0;
       return true;
     }
@@ -101,7 +100,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 export const createBouncingExample = (circleObject: CircleInterface) => {
   "worklet";
   const x = 100;
-  const y = 600;
+  const y = 450;
 
   circleObject.x.value = x;
   circleObject.y.value = y;
