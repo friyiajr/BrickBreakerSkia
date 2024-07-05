@@ -5,7 +5,9 @@ import {
   matchFont,
   Rect,
   RoundedRect,
+  Shader,
   Text,
+  useClock,
   vec,
 } from "@shopify/react-native-skia";
 import React from "react";
@@ -23,16 +25,20 @@ import {
 import {
   BRICK_HEIGHT,
   BRICK_MIDDLE,
+  BRICK_ROW_LENGTH,
   BRICK_WIDTH,
   height,
-  LIME_GREEN,
+  BALL_COLOR,
   PADDLE_HEIGHT,
   PADDLE_MIDDLE,
   PADDLE_WIDTH,
+  TOTAL_BRICKS,
   width,
 } from "./constants";
 import { animate, createBouncingExample, radius } from "./sample";
 import { BrickInterface, CircleInterface, PaddleInterface } from "./types";
+
+import { shader } from "./shader";
 
 interface Props {
   idx: number;
@@ -48,6 +54,8 @@ const fontStyle = {
 
 // @ts-ignore
 const font = matchFont(fontStyle);
+
+const resolution = vec(width, height);
 
 const Brick = ({ idx, brick }: Props) => {
   const color = useDerivedValue(() => {
@@ -65,7 +73,7 @@ const Brick = ({ idx, brick }: Props) => {
       r={8}
     >
       <LinearGradient
-        start={vec(5, 200)}
+        start={vec(5, 300)}
         end={vec(4, 50)}
         colors={["red", "orange"]}
       />
@@ -75,6 +83,7 @@ const Brick = ({ idx, brick }: Props) => {
 
 export default function App() {
   const brickCount = useSharedValue(0);
+  const clock = useClock();
 
   const circleObject: CircleInterface = {
     type: "Circle",
@@ -103,7 +112,7 @@ export default function App() {
     width: PADDLE_WIDTH,
   };
 
-  const bricks: BrickInterface[] = Array(9)
+  const bricks: BrickInterface[] = Array(TOTAL_BRICKS)
     .fill(0)
     .map((_, idx) => {
       const farBrickX = BRICK_MIDDLE + BRICK_WIDTH + 50;
@@ -113,23 +122,17 @@ export default function App() {
       const ySpacing = 45;
 
       let startingXPosition = -1;
-      let startingYPosition = -1;
 
-      if (idx % 3 === 0) {
+      if (idx % BRICK_ROW_LENGTH === 0) {
         startingXPosition = farBrickX;
-      } else if (idx % 3 === 1) {
+      } else if (idx % BRICK_ROW_LENGTH === 1) {
         startingXPosition = middleBrickX;
-      } else if (idx % 3 === 2) {
+      } else if (idx % BRICK_ROW_LENGTH === 2) {
         startingXPosition = closeBrickX;
       }
 
-      if (idx / 9 <= 0.333) {
-        startingYPosition = startingY;
-      } else if (idx / 9 <= 0.666) {
-        startingYPosition = startingY + ySpacing;
-      } else if (idx / 9 <= 1) {
-        startingYPosition = startingY + ySpacing * 2;
-      }
+      const startingYPosition =
+        startingY + ySpacing * Math.floor(idx / BRICK_ROW_LENGTH);
 
       return {
         type: "Brick",
@@ -167,7 +170,7 @@ export default function App() {
       return;
     }
 
-    if (brickCount.value === 9 || brickCount.value === -1) {
+    if (brickCount.value === TOTAL_BRICKS || brickCount.value === -1) {
       circleObject.ax = 0.5;
       circleObject.ay = 1;
       circleObject.vx = 0;
@@ -184,7 +187,7 @@ export default function App() {
 
   const gesture = Gesture.Pan()
     .onBegin(() => {
-      if (brickCount.value === 9 || brickCount.value === -1) {
+      if (brickCount.value === TOTAL_BRICKS || brickCount.value === -1) {
         resetGame();
       }
     })
@@ -193,28 +196,38 @@ export default function App() {
     });
 
   const opacity = useDerivedValue(() => {
-    return brickCount.value === 9 || brickCount.value === -1 ? 1 : 0;
+    return brickCount.value === TOTAL_BRICKS || brickCount.value === -1 ? 1 : 0;
   }, [brickCount]);
 
   const textPosition = useDerivedValue(() => {
-    const endText = brickCount.value === 9 ? "YOU WIN" : "YOU LOSE";
+    const endText = brickCount.value === TOTAL_BRICKS ? "YOU WIN" : "YOU LOSE";
     return (width - font.measureText(endText).width) / 2;
   }, [font]);
 
   const gameEndingText = useDerivedValue(() => {
-    return brickCount.value === 9 ? "YOU WIN" : "YOU LOSE";
+    return brickCount.value === TOTAL_BRICKS ? "YOU WIN" : "YOU LOSE";
   }, []);
+
+  const uniforms = useDerivedValue(() => {
+    return {
+      iResolution: resolution,
+      iTime: clock.value * 0.0005,
+    };
+  }, [clock, width, height]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector gesture={gesture}>
         <View style={styles.container}>
           <Canvas style={{ flex: 1 }}>
+            <Rect x={0} y={0} height={height} width={width}>
+              <Shader source={shader} uniforms={uniforms} />
+            </Rect>
             <Circle
               cx={circleObject.x}
               cy={circleObject.y}
               r={radius}
-              color={LIME_GREEN}
+              color={BALL_COLOR}
             />
             <RoundedRect
               x={rectangleObject.x}

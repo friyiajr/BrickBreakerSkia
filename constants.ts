@@ -2,8 +2,10 @@ import { Dimensions } from "react-native";
 
 const { height: windowHeight, width: windowWidth } = Dimensions.get("window");
 
-export const LIME_GREEN = "#4AF626";
+export const BALL_COLOR = "#77FF23";
 
+export const TOTAL_BRICKS = 18;
+export const BRICK_ROW_LENGTH = 3;
 export const PADDLE_HEIGHT = 50;
 export const PADDLE_WIDTH = 125;
 export const BRICK_HEIGHT = 25;
