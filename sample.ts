@@ -1,6 +1,6 @@
 import { Dimensions } from "react-native";
 import { SharedValue } from "react-native-reanimated";
-import { PADDLE_HEIGHT, PADDLE_WIDTH } from "./constants";
+import { MAX_SPEED, PADDLE_HEIGHT, PADDLE_WIDTH, RADIUS } from "./constants";
 import {
   BrickInterface,
   CircleInterface,
@@ -11,25 +11,22 @@ import {
 
 const { width, height } = Dimensions.get("window");
 
-export const radius = 16;
-const maxSpeed = 50;
-
 const move = (object: ShapeInterface, dt: number) => {
   "worklet";
   if (object.type === "Circle") {
     object.vx += object.ax * dt;
     object.vy += object.ay * dt;
-    if (object.vx > maxSpeed) {
-      object.vx = maxSpeed;
+    if (object.vx > MAX_SPEED) {
+      object.vx = MAX_SPEED;
     }
-    if (object.vx < -maxSpeed) {
-      object.vx = -maxSpeed;
+    if (object.vx < -MAX_SPEED) {
+      object.vx = -MAX_SPEED;
     }
-    if (object.vy > maxSpeed) {
-      object.vy = maxSpeed;
+    if (object.vy > MAX_SPEED) {
+      object.vy = MAX_SPEED;
     }
-    if (object.vy < -maxSpeed) {
-      object.vy = -maxSpeed;
+    if (object.vy < -MAX_SPEED) {
+      object.vy = -MAX_SPEED;
     }
     object.x.value += object.vx * dt;
     object.y.value += object.vy * dt;
@@ -98,18 +95,17 @@ export const createBouncingExample = (circleObject: CircleInterface) => {
 
   circleObject.x.value = 100;
   circleObject.y.value = 450;
-  circleObject.r = radius;
+  circleObject.r = RADIUS;
   circleObject.ax = 0.5;
   circleObject.ay = 1;
   circleObject.vx = 0;
   circleObject.vy = 0;
-  circleObject.m = radius * 10;
+  circleObject.m = RADIUS * 10;
 };
 
 function circleRect(
   cx: number,
   cy: number,
-  radius: number,
   rx: number,
   ry: number,
   rw: number,
@@ -132,7 +128,7 @@ function circleRect(
   let distance = Math.sqrt(distX * distX + distY * distY);
 
   // if the distance is less than the radius, collision!
-  if (distance <= radius) {
+  if (distance <= RADIUS) {
     return true;
   }
   return false;
@@ -164,7 +160,6 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
     const isCollision = circleRect(
       circleObj.x.value,
       circleObj.y.value,
-      radius,
       paddleObj.x.value,
       paddleObj.y.value,
       PADDLE_WIDTH,
@@ -180,7 +175,6 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
         collisionInfo: { o1, o2, dx, dy, d },
         collided: true,
       };
-    } else {
     }
   }
   return {

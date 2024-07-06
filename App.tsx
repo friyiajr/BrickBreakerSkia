@@ -34,8 +34,9 @@ import {
   PADDLE_WIDTH,
   TOTAL_BRICKS,
   width,
+  RADIUS,
 } from "./constants";
-import { animate, createBouncingExample, radius } from "./sample";
+import { animate, createBouncingExample } from "./sample";
 import { BrickInterface, CircleInterface, PaddleInterface } from "./types";
 
 import { shader } from "./shader";
@@ -90,7 +91,7 @@ export default function App() {
     id: 0,
     x: useSharedValue(0),
     y: useSharedValue(0),
-    r: radius,
+    r: RADIUS,
     m: 0,
     ax: 0,
     ay: 0,
@@ -226,7 +227,7 @@ export default function App() {
             <Circle
               cx={circleObject.x}
               cy={circleObject.y}
-              r={radius}
+              r={RADIUS}
               color={BALL_COLOR}
             />
             <RoundedRect

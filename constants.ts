@@ -12,6 +12,8 @@ export const BRICK_HEIGHT = 25;
 export const BRICK_WIDTH = 80;
 export const BRICK_MIDDLE = windowWidth / 2 - BRICK_WIDTH / 2;
 export const PADDLE_MIDDLE = windowWidth / 2 - PADDLE_WIDTH / 2;
+export const RADIUS = 16;
+export const MAX_SPEED = 50;
 
 export const height = windowHeight;
 export const width = windowWidth;
