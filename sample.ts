@@ -49,6 +49,7 @@ export const resolveCollisionWithBounce = (info: Collision) => {
   circleInfo.ay = -circleInfo.ay;
 };
 
+// Source: https://martinheinz.dev/blog/15
 export const resolveWallCollision = (object: ShapeInterface) => {
   "worklet";
   // Collision with the right wall
@@ -56,7 +57,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
     const circleObject = object as CircleInterface;
     if (circleObject.x.value + circleObject.r > width) {
       // Calculate the overshot
-      circleObject.x.value = width - circleObject.r;
+      circleObject.x.value = width - circleObject.r * 2;
       circleObject.vx = -circleObject.vx;
       circleObject.ax = -circleObject.ax;
     }
@@ -74,7 +75,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 
     // Collision with the left wall
     else if (circleObject.x.value - circleObject.r < 0) {
-      circleObject.x.value = circleObject.r;
+      circleObject.x.value = circleObject.r * 2;
       circleObject.vx = -circleObject.vx;
       circleObject.ax = -circleObject.ax;
     }
@@ -103,6 +104,7 @@ export const createBouncingExample = (circleObject: CircleInterface) => {
   circleObject.m = RADIUS * 10;
 };
 
+// Source: https://www.jeffreythompson.org/collision-detection/table_of_contents.php
 function circleRect(
   cx: number,
   cy: number,
