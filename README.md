@@ -1,11 +1,18 @@
-# Genetic AI Animation
+# Learn Game Dev with Expo and Skia!
 
-A design exploration based on companies that do medical research like @BenchSci. Runs in 60FPS even on low end Android devices!!!
+A Brick Breaker game created using purely React-Native to teach game development concepts
 
-![The Animation](./genetic.gif)
+Branches Guide:
+
+- `main` - the full solution
+- `starter` - the project stripped down so you can follow along
 
 ## How to run it:
 
 1. `cd` into the project
 2. Run the `yarn` command
 3. Run `npx expo start` and open on the device of your choice ❤️
+
+## Demo
+
+![The Game](./breaker.gif)
